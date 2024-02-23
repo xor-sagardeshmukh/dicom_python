@@ -36,8 +36,8 @@ def convert(out, inp):
         data = pydicom.dcmread(os.path.join(inp,i))
         if "NumberOfFrames" in data:
             n = int(data.NumberOfFrames)
-            print("Number of frames -> ",n)
-            print("Duration of video will be -> ",n//24)
+            print("Number of frames -> ", n)
+            print("Duration of video will be -> ", n//24)
             to_video(data,out)
         else:
             print(1)
