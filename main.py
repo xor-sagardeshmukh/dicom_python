@@ -8,12 +8,16 @@ import cv2
 from PIL import Image
 from datetime import datetime
 
+def next_num(physician_id,out):
+    count = 0
+    for i in os.listdir(out):
+        if i.startswith(physician_id):
+            count = count + 1
+    return count
+
 
 def to_video(data,out):
-    directory = os.path.dirname(out)
-    if not os.path.exists(directory):
-        os.makedirs(directory)
-    out_path = out + str(data.ReferringPhysicianName) + '_' + datetime.now().strftime("%Y%m%d-%H%M") + '.mp4'
+    out_path = out + str(data.ReferringPhysicianName) + '_' + datetime.now().strftime("%Y%m%d-%H%M") + '_' + str(next_num(data.ReferringPhysicianName,out)+1) + '.mp4'
     print(f"Video will be saved to this path -> {out_path}")
     if 'PixelData' in data:
         pixel_data = data.pixel_array
@@ -31,10 +35,7 @@ def to_video(data,out):
 
 
 def to_image(data, out):
-    directory = os.path.dirname(out)
-    if not os.path.exists(directory):
-        os.makedirs(directory)
-    out_path = out + str(data.ReferringPhysicianName) + '_' + datetime.now().strftime("%Y%m%d-%H%M") + '.png';
+    out_path = out + str(data.ReferringPhysicianName) + '_' + datetime.now().strftime("%Y%m%d-%H%M") + '_' + str(next_num(data.ReferringPhysicianName,out)+1) + '.png'
     print(f"Image will be saved to this path -> {out_path}")
     if 'PixelData' in data:
         pixel_data = data.pixel_array
@@ -46,9 +47,10 @@ def to_image(data, out):
 
 
 def convert(out, inp):
+    print('-------------------Execution Started-------------------')
     for i in os.listdir(inp):
         inp_path = os.path.join(inp, i)
-        out_path = out + i + '/'
+        out_path = out
         dicom_files = [i for i in os.listdir(inp_path) if i.endswith('.dcm')]
         for i in dicom_files:
             data = pydicom.dcmread(os.path.join(inp_path,i))
@@ -61,6 +63,7 @@ def convert(out, inp):
             else:
                 print(f'Number of frames -> {n} frame')
                 to_image(data,out_path)
+    print('--------------------Execution Ended--------------------')
 
 def dicom():
     inp = "input_files/"            #provide with path for the input dicom files
