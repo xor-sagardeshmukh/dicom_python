@@ -8,6 +8,25 @@ import cv2
 from PIL import Image
 from datetime import datetime
 
+
+def photometric(data):
+    if 'PhotometricInterpretation' in data:
+        photometric_interp = data.PhotometricInterpretation
+        if photometric_interp.startswith('MONOCHROME'):
+            print("Black and White")
+            return False
+        elif photometric_interp in ['RGB', 'YBR_FULL', 'YBR_FULL_422', 'YBR_PARTIAL_422']:
+            print("Color1")
+            return True
+    if 'SamplesPerPixel' in data:
+        samples_per_pixel = data.SamplesPerPixel
+        if samples_per_pixel == 1:
+            print("Black and White")
+            return False
+        elif samples_per_pixel >= 3:
+            print("Color2")
+            return True
+
 def next_num(physician_id,out):
     count = 0
     for i in os.listdir(out):
