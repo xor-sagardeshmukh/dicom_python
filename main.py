@@ -1,6 +1,3 @@
-
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
 import os
 import pydicom
 import numpy as np
@@ -31,6 +28,7 @@ def photometric(data):
             print("Color2")
             print("--------Photometric Data Extracted--------")
             return 'COLORED'
+    return None
 
 def next_num(physician_id,out):
     count = 0
@@ -40,7 +38,7 @@ def next_num(physician_id,out):
             count = count + 1
     return count
 
-
+#function converts the dicom file as MP4
 def to_video(data,out):
     out_path = out + str(data.ReferringPhysicianName) + '_' + datetime.now().strftime("%Y%m%d-%H%M") + '_' + str(next_num(data.ReferringPhysicianName,out)+1) + '.mp4'
     print(f"Video will be saved to this path -> {out_path}")
@@ -49,7 +47,7 @@ def to_video(data,out):
     else:
         raise ValueError("DICOM file does not contain pixel data.")
     print('----------------Extracting the Frame Rate Per Second-------------------')
-    fps = 24
+    fps = None
     photoelement = photometric(data)
     if 'CineRate' in data:
         fps = data.CineRate
@@ -57,8 +55,23 @@ def to_video(data,out):
         frame_time_ms = data.FrameTime
         fps = 1000 // frame_time_ms
         fps = int(fps)
+    elif 'FrameIncrementPointer' in data:
+        pointer = data.FrameIncrementPointer
+        if pointer in data:
+            frame_increment = data[pointer].value
+            fps = 1000 / frame_increment
+    elif 'TemporalResolution' in data:
+        temporal_resolution = data.TemporalResolution
+        fps = 1000 // temporal_resolution
+    elif 'FrameTimeVector' in data:
+        frame_time_vector = data.FrameTimeVector
+        if frame_time_vector:
+            average_frame_time_ms = sum(frame_time_vector) / len(frame_time_vector)
+            fps = 1000 // average_frame_time_ms
     else:
         raise ValueError("No CineRate or FrameTime attribute found in DICOM file")
+    if fps is not None:
+        fps = int(fps)
     print('fps:', fps)
     n = int(data.NumberOfFrames)
     print(f"Number of frames -> {n} frames")
@@ -66,11 +79,12 @@ def to_video(data,out):
     print('----------------Video Conversion process-------------------')
     rows = int(data.Rows)
     cols = int(data.Columns)
+    num_frames = data.NumberOfFrames
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
     out = cv2.VideoWriter(out_path, fourcc, fps, (cols, rows))
-    for frame_num in range(pixel_data.shape[0]):
-        frame_data = pixel_data[frame_num]
-        frame_data = np.uint8(frame_data)
+    for frame_num in range(num_frames):
+        frame_data = pixel_data[frame_num]     #getting the ith frame data from the pixel array
+        frame_data = np.uint8(frame_data)      #Converting the frame data array into Unsigned integer 8-bot
         out.write(frame_data)
     out.release()
     print(f"Video converted and saved to this path -> {out_path}")
