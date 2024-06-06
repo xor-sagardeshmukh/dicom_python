@@ -28,6 +28,7 @@ def photometric(data):
             print("Color2")
             print("--------Photometric Data Extracted--------")
             return 'COLORED'
+    print('-------------No Photometric Data----------------')
     return None
 
 def next_num(physician_id,out):
@@ -84,7 +85,25 @@ def to_video(data,out):
     out = cv2.VideoWriter(out_path, fourcc, fps, (cols, rows))
     for frame_num in range(num_frames):
         frame_data = pixel_data[frame_num]     #getting the ith frame data from the pixel array
-        frame_data = np.uint8(frame_data)      #Converting the frame data array into Unsigned integer 8-bot
+        #processing the colored dicom files since the cv2 only handles with BGR format
+        if photoelement == 'RGB':
+            frame_data = cv2.cvtColor(frame_data, cv2.COLOR_RGB2BGR)   #converting the RGB format to BGR
+            frame_data = np.uint8(frame_data)  # Converting the frame data array into Unsigned integer 8-bot
+        elif photoelement in ['YBR_FULL', 'YBR_FULL_422', 'YBR_PARTIAL_422']:
+            frame_data = cv2.cvtColor(frame_data, cv2.COLOR_YUV2BGR)    #converting the YBR format to BGR
+            frame_data = np.uint8(frame_data)  # Converting the frame data array into Unsigned integer 8-bot
+        elif photoelement == 'COLORED':
+            try:
+                frame_data = cv2.cvtColor(frame_data, cv2.COLOR_RGB2BGR)
+                frame_data = np.uint8(frame_data)  # Converting the frame data array into Unsigned integer 8-bot
+            except cv2.error:
+                try:
+                    frame_data = cv2.cvtColor(frame_data, cv2.COLOR_YUV2BGR)
+                    frame_data = np.uint8(frame_data)  # Converting the frame data array into Unsigned integer 8-bot
+                except cv2.error:
+                    frame_data = np.uint8(frame_data)  # Converting the frame data array into Unsigned integer 8-bot
+        else:
+            frame_data = np.uint8(frame_data)  # Converting the frame data array into Unsigned integer 8-bot
         out.write(frame_data)
     out.release()
     print(f"Video converted and saved to this path -> {out_path}")
@@ -143,7 +162,5 @@ def dicom():
     convert(out, inp)
 
 
-
-# Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     dicom()
