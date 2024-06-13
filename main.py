@@ -157,7 +157,7 @@ def convert(out, inp):
     print('--------------------Execution Ended--------------------')
 
 def dicom():
-    inp = "../test/"            #provide with path for the input dicom files
+    inp = "../input_files/"            #provide with path for the input dicom files
     out = "../output_files/"            #provide with path for the output dicom files
     convert(out, inp)
 
